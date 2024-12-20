@@ -13,7 +13,8 @@ class CountryService {
         final data = json.decode(response.body);
         return data['country'] ?? 'Unknown';
       } else {
-        throw Exception('Failed to fetch country: ${response.statusCode}');
+        print('Failed to fetch country: ${response.statusCode}');
+        return 'Unknown';
       }
     } catch (e) {
       print('Error fetching country: $e');

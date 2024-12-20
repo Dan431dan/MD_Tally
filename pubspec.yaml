@@ -3,26 +3,34 @@ description: A 2048 game built with Flutter.
 version: 1.0.1
 
 environment:
-  sdk: ">=2.19.0 <4.0.0"
+  sdk: ">=3.0.5 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.2
-  firebase_core: ^2.17.0
-  firebase_database: ^10.0.6
-  cloud_firestore: ^4.17.5
+  firebase_core: ^3.8.0
+  firebase_database: ^11.2.0
+  cloud_firestore: ^5.6.0
   provider: ^6.1.2
   url_launcher: ^6.3.1
   flutter_launcher_icons: ^0.14.1
   device_preview: ^1.2.0
-  firebase_auth: ^4.16.0
+  firebase_auth: ^5.3.4
+  internet_connection_checker: ^1.0.0+1
+  flutter_inappwebview: ^6.0.0
+  flutter_downloader: ^1.11.8
+  permission_handler: ^11.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
 flutter:
+
+  assets:
+    - icons/2048.png
+
   uses-material-design: true
 ##flutter_launcher_icons:
   ##android: "launcher_icon"
